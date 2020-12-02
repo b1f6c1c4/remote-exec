@@ -1,0 +1,58 @@
+#!/bin/sh
+
+set -e
+
+# remote-exec: Run command on remote server with sshfs and overlayfs
+
+REL=""
+pushd
+while true; do
+    OWD="$PWD"
+    if [ -f ./rmt-config ]; then
+        . rmt-config
+        break
+    else
+        REL="$(basename "$OWD")/$REL"
+        cd ..
+        if [ "$PWD" = "$OWD" ]; then
+            echo 'remote-exec: rmt-config not found' >&2
+            exit 3
+        fi
+    fi
+done
+popd
+
+OWD="$(realpath "$OWD")"
+
+WD="$PWD"
+
+if [ -z "$RMT_HOST" ]; then
+    echo 'remote-exec: RMT_HOST not found' >&2
+    exit 2
+fi
+
+if [ -z "$RMT_RDIR" ]; then
+    RMT_RDIR=".rmt"
+fi
+
+T="$(realpath "$(mktemp -d)")"
+finish() {
+    rm -rf "$T"
+}
+trap finish EXIT
+cat "$OWD/.rmt-config" >"$T"
+
+# check if already mounted
+
+if mount | grep -qF " on $OWD type fuse.sshfs"; then
+    RD="$RMT_RDIR/$(sha1sum "$OWD")"
+    echo "remote-exec: Creating remote dir $RD" >&2
+    ssh "$RMT_HOST" mkdir -p "$RD"
+    echo "remote-exec: Mount remote dir to $OWD by sshfs" >&2
+    sshfs "$RMT_HOST:$RD" "$OWD"
+    echo "remote-exec: Restore $OWD/.rmt-config" >&2
+    cat "$T" >"$OWD/.rmt-config"
+fi
+
+echo "remote-exec: ssh -Y $RMT_HOST /usr/bin/env -C $RD/$REL $*" >&2
+exec ssh -Y "$RMT_HOST" /usr/bin/env -C "$RD/$REL" "$@"
