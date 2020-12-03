@@ -11,6 +11,8 @@ if [ "$0" = "," ]; then
     if [ "$#" -eq 1 ]; then
         if SOURCED=MOUNT command , "$1"; then
             cd "$1"
+            echo 'remote-exec: Mount succeed, current pwd:' >&2
+            pwd >&2
         fi
     elif [ "$#" -ge 2 ]; then
         echo 'remote-exec: Too many arguments' >&2
@@ -20,6 +22,8 @@ if [ "$0" = "," ]; then
         cd /
         if RMT_RESULT="$(SOURCED=UMOUNT command , "$OWD")"; then
             cd "$RMT_RESULT"
+            echo 'remote-exec: Unmount succeed, current pwd:' >&2
+            pwd >&2
         else
             cd "$OWD"
         fi
@@ -57,6 +61,9 @@ cd "$WD"
 if [ -z "$RMT_HOST" ]; then
     echo 'remote-exec: RMT_HOST not found' >&2
     exit 2
+fi
+if [ -z "$RMT_SSH" ]; then
+    RMT_SSH="ssh -Y -t"
 fi
 if [ -z "$RMT_SSHFS" ]; then
     RMT_SSHFS="sshfs"
@@ -109,10 +116,13 @@ else
     echo 'remote-exec: WARNING: You may need to execute "cd ."' >&2
 fi
 
+CMD="/usr/bin/env -C $(/usr/bin/printf '%q' "$RD/$REL") $RMT_RENV"
+
 if [ "$#" -eq 0 ]; then
-    echo "remote-exec: ssh -Y $RMT_HOST -t /usr/bin/env -C $RD/$REL $RMT_RSHELL" >&2
-    exec ssh -Y "$RMT_HOST" -t /usr/bin/env -C "$RD/$REL" "$RMT_RSHELL"
+    CMD="$CMD $(/usr/bin/printf '%q' "$RMT_RSHELL")"
 else
-    echo "remote-exec: ssh -Y $RMT_HOST /usr/bin/env -C $RD/$REL $*" >&2
-    exec ssh -Y "$RMT_HOST" /usr/bin/env -C "$RD/$REL" "$@"
+    CMD="$CMD$(/usr/bin/printf ' %q' "$@")"
 fi
+
+echo "remote-exec: $RMT_SSH -Y $RMT_HOST /bin/sh -c $(/usr/bin/printf '%q' "$CMD")" >&2
+exec $RMT_SSH "$RMT_HOST" /bin/sh -c "$(/usr/bin/printf '%q' "$CMD")"

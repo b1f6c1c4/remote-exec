@@ -1,4 +1,4 @@
-# remote-exec: Run command on remote server with sshfs and overlayfs
+# remote-exec: Run command on remote server with sshfs
 
 ## TL;DR
 
@@ -10,6 +10,7 @@ you can just type:
 mkdir magic
 cat >magic/.rmt-config <<EOF
 RMT_HOST=<user>@<host>
+RMT_RENV='PATH=/home/<user>/.local/bin/:/home/<user>/.local/sbin/:/usr/local/bin:/usr/bin'
 RMT_RSHELL=/usr/bin/zsh
 EOF
 
@@ -31,7 +32,20 @@ EOF
 
 ## Configuration
 
-- [ ] `RMT_HOST`: (Required) The remote machine
-- [ ] `RMT_SSHFS`: (Optional) Override comamnd line for sshfs, default `sshfs`
-- [ ] `RMT_RSHELL`: (Optional) Override login shell **on remote machine**, can be automatically detected
-- [ ] `RMT_RDIR`: (Optional) A path **on remote machine** relative to `$HOME` to store your data, default `sshfs`
+- `RMT_HOST`: (Required) The remote machine
+- `RMT_SSH`: (Optional) Override command line for ssh, default `ssh -Y -t`
+- `RMT_SSHFS`: (Optional) Override command line for sshfs, default `sshfs`
+- `RMT_RENV`: (Optional) Will be added to `/usr/bin/env` **on remote machine**
+- `RMT_RSHELL`: (Optional) Override login shell **on remote machine**, can be automatically detected
+- `RMT_RDIR`: (Optional) A path **on remote machine** relative to `$HOME` to store your data, default `sshfs`
+
+## Limitation
+
+Quotation and connection is a mess.
+If your command contains `$`, escape carefully.
+There's absolutely no gurantee that any kind of escape will or will not work.
+If you want to run any command containing `&&`, `||`, or `|`, type `,` and use the remote shell.
+
+## License
+
+MIT
