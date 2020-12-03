@@ -9,6 +9,7 @@ you can just type:
 ```bash
 cat >.rmt-config <<EOF
 RMT_HOST=<user>@<host>
+RMT_RSHELL=/usr/bin/zsh
 EOF
 , <the-command-you-want-to-run>
 ```
@@ -16,4 +17,5 @@ EOF
 ## Configuration
 
 - [ ] `RMT_HOST`: (Required) The remote machine
+- [ ] `RMT_RSHELL`: (Optional) Override login shell **on remote machine**
 - [ ] `RMT_RDIR`: (Optional) A path **on remote machine** relative to `$HOME` to store your data
