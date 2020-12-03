@@ -32,5 +32,6 @@ EOF
 ## Configuration
 
 - [ ] `RMT_HOST`: (Required) The remote machine
-- [ ] `RMT_RSHELL`: (Optional) Override login shell **on remote machine**
-- [ ] `RMT_RDIR`: (Optional) A path **on remote machine** relative to `$HOME` to store your data
+- [ ] `RMT_SSHFS`: (Optional) Override comamnd line for sshfs, default `sshfs`
+- [ ] `RMT_RSHELL`: (Optional) Override login shell **on remote machine**, can be automatically detected
+- [ ] `RMT_RDIR`: (Optional) A path **on remote machine** relative to `$HOME` to store your data, default `sshfs`
