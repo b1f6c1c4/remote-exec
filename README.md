@@ -1,13 +1,24 @@
-# `,`: Run commands on remote server with sshfs
+# `,` and `,,`: Run commands on remote server with sshfs
 
-## Requirements
+## Overview
 
-- `,`: Run commands on remote server with files stored remotely
-    - Local: `ssh`, `sshfs`, `/usr/bin/printf`, `sha1sum`, `realpath`
-    - Remote: `sshd`, `/usr/bin/env`
-- `,,`: Run commands on remote server with (existing) files stored locally
-    - Local: `ssh`, `sshd`, `/usr/bin/printf`, `sha1sum`, `realpath`
-    - Remote: `ssh`, `sshd`, `/usr/bin/env`, `sshfs`
+- `,`: Run commands on remote server with all files stored **remotely**
+    - Pros: Remote commands access files without networking, reducing latency
+    - Pros: Save huge disk space on your local machine.
+    - Cons: If the remote machine is down, you cannot work at all.
+    - Cons: Cannot switch among multiple remote machines easily.
+    - Cons: During setup, you need to manually transfer all your data.
+    - Use this mode when: Compile `gcc`, `llvm`, Linux kernel, etc.
+- `,,`: Run commands on remote server with all files stored **locally**
+    - Pros: Setup is instant and does not involve any data movement.
+    - Pros: You can still work locally when the remote machine is down.
+    - Pros: You can easily switch among multiple remote machines.
+    - Cons: Remote commands access files through networking, increasing latency
+    - Cons: Higher disk usage on local machine.
+    - Cons: Local commands access files through internet, increasing latency
+    - Use this mode when: Unit testing your own work.
+
+Note: You need `sshfs` installed on both machine.
 
 ## Usage - `,`
 
