@@ -1,11 +1,15 @@
-# `,`: Run command on remote server with sshfs
+# `,`: Run commands on remote server with sshfs
 
 ## Requirements
 
-- Local: `ssh`, `sshfs`, `/usr/bin/printf`, `sha1sum`, `realpath`
-- Remote: `sshd`, `/usr/bin/env`
+- `,`: Run commands on remote server with files stored remotely
+    - Local: `ssh`, `sshfs`, `/usr/bin/printf`, `sha1sum`, `realpath`
+    - Remote: `sshd`, `/usr/bin/env`
+- `,,`: Run commands on remote server with (existing) files stored locally
+    - Local: `ssh`, `sshd`, `/usr/bin/printf`, `sha1sum`, `realpath`
+    - Remote: `ssh`, `sshd`, `/usr/bin/env`, `sshfs`
 
-## Usage
+## Usage - `,`
 
 1. On your local machine, create an empty folder called `magic`:
 
@@ -48,9 +52,38 @@
 
 1. To get the files back, simply type `. , magic` again.
 
+## Usage - `,,`
+
+1. Inside a non-empty folder, create a config file in the folder:
+
+    ```bash
+    echo 'RMT_HOST=<user>@<host>' > magic/.rmt-config
+    ```
+
+1. Now you can operate on the folder from both side in one single shell:
+
+    ```bash
+    ,, make -j64    # Run heavy jobs using remote machine
+    ```
+    Note: Files are stored remotely but is visible locally thanks to `sshfs`.
+
+1. You can of course launch a remote shell like ssh:
+
+    ```bash
+    ,,
+    ```
+
+1. To stop:
+
+    ```bash
+    ,, ,
+    ```
+    **Note: Files are still stored on the local machine.**
+
 ## Configuration: `.rmt-config`
 
 - `RMT_HOST`: (Required) The remote machine.
+- `RMT_LOCALHOST`: (Required for `,,`) The local machine.
 - `RMT_SSH`: (Optional) To override the command line for ssh. Default is `ssh -Y -t`.
 - `RMT_SSHFS`: (Optional) To override the command line for sshfs, Default is `sshfs`.
 - `RMT_RENV`: (Optional) Will be added to the command line of `/usr/bin/env` during `ssh` call.

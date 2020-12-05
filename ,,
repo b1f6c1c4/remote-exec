@@ -1,0 +1,78 @@
+#!/bin/sh
+
+# check if is sourced
+if [ "$0" = "," ]; then
+    echo 'remote-exec: You should not source ,,' >&2
+    return
+fi
+
+set -e
+
+REL=""
+WD="$PWD"
+while true; do
+    OWD="$PWD"
+    if [ -f .rmt-config ]; then
+        . "$PWD/.rmt-config"
+        break
+    else
+        REL="$(basename "$OWD")/$REL"
+        cd ..
+        if [ "$PWD" = "$OWD" ]; then
+            echo 'remote-exec: .rmt-config not found' >&2
+            exit 3
+        fi
+    fi
+done
+OWD="$(realpath "$OWD")"
+
+cd "$WD"
+
+if [ -z "$RMT_HOST" ]; then
+    echo 'remote-exec: RMT_HOST not found' >&2
+    exit 2
+fi
+if [ -z "$RMT_SSH" ]; then
+    RMT_SSH="ssh -Y -t"
+fi
+if [ -z "$RMT_SSHFS" ]; then
+    RMT_SSHFS="sshfs"
+fi
+if [ -z "$RMT_RDIR" ]; then
+    RMT_RDIR=".rmt"
+fi
+
+# check if already mounted
+
+RDH="$(printf '%s' "$OWD" | sha1sum | cut -d ' ' -f 1)"
+RD="$RMT_RDIR/$RDH"
+if ssh "$RMT_HOST" mount | grep -qF "/$RDH type fuse.sshfs"; then
+    if [ "$#" -eq 1 ] && [ "$1" = "," ]; then
+        echo "remote-exec: Unmounting remote dir $RD" >&2
+        ssh "$RMT_HOST" umount "$RD"
+        ssh "$RMT_HOST" rmdir "$RD"
+        echo "remote-exec: Unmount succeed" >&2
+        exit 0
+    fi
+else
+    if [ "$#" -eq 1 ] && [ "$1" = "," ]; then
+        echo "remote-exec: WARNING: $OWD is already unmounted" >&2
+        exit 4
+    fi
+    echo "remote-exec: Creating remote dir $RD" >&2
+    ssh "$RMT_HOST" mkdir -p "$RD"
+    echo "remote-exec: Mount $OWD to remote dir by reversed sshfs" >&2
+    ssh "$RMT_HOST" $RMT_SSHFS "$RMT_LOCALHOST:$OWD" "$RD"
+fi
+
+CMD="/usr/bin/env -C $(/usr/bin/printf '%q' "$RD/$REL") $RMT_RENV"
+
+if [ "$#" -eq 0 ]; then
+    RMT_RSHELL="$(ssh "$RMT_HOST" echo '$SHELL')"
+    CMD="$CMD $(/usr/bin/printf '%q' "$RMT_RSHELL")"
+else
+    CMD="$CMD$(/usr/bin/printf ' %q' "$@")"
+fi
+
+echo "remote-exec: $RMT_SSH -Y $RMT_HOST /bin/sh -c $(/usr/bin/printf '%q' "$CMD")" >&2
+exec $RMT_SSH "$RMT_HOST" /bin/sh -c "$(/usr/bin/printf '%q' "$CMD")"

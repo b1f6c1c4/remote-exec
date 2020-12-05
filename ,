@@ -1,7 +1,5 @@
 #!/bin/sh
 
-# remote-exec: Run command on remote server with sshfs and overlayfs
-
 # check if is sourced
 if [ "$0" = "," ]; then
     if ! which , >/dev/null; then
