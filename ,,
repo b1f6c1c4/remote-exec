@@ -8,6 +8,11 @@ fi
 
 set -e
 
+if [ ! -t 0 ] || [ ! -t 1 ] || [ ! -t 2 ]; then
+    echo 'remote-exec: WHAT ARE YOU DOING??? YOU SHOULD NEVER REDIRECT , OR ,, !!!' >&2
+    exit 114
+fi
+
 REL=""
 WD="$PWD"
 while true; do
@@ -25,6 +30,13 @@ while true; do
     fi
 done
 OWD="$(realpath "$OWD")"
+
+set +e
+if [ -z "$RMT_LOCALHOST" ]; then
+    echo 'remote-exec: WHAT ARE YOU DOING??? YOU SHOULD USE , INSTEAD OF ,, !!!' >&2
+    exit 114
+fi
+set -e
 
 cd "$WD"
 
